@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT / "scripts"))
 from plot_helpers import (
     load_data,
@@ -33,10 +33,11 @@ def plot_for_year(df, year: int) -> None:
     fig, ax = plt.subplots(figsize=(9, 11))
 
     gpd, ctx = try_import_basemap()
-    counties_path = ROOT / "data" / "ca_counties.geojson"
+    counties_geojson = ROOT / "data" / "ca_counties.geojson"
+    counties_shp = ROOT / "data" / "shapefile" / "CA_Counties.shp"
 
-    if gpd and ctx and counties_path.exists():
-        counties = gpd.read_file(counties_path)
+    if gpd and ctx and (counties_shp.exists() or counties_geojson.exists()):
+        counties = gpd.read_file(counties_shp if counties_shp.exists() else counties_geojson)
         # Try common county name fields
         name_col = None
         for cand in ["name", "NAME", "county", "COUNTY", "CountyName", "COUNTY_NAME"]:

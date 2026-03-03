@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT / "scripts"))
 from plot_helpers import load_data, OUT_DIR, ensure_out_dir
 
