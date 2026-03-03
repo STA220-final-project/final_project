@@ -24,6 +24,7 @@ SCRIPTS = [
     "rq5/rq5_high_burden_counts_2021.py",
     "rq5/rq5_high_burden_counts_multi.py",
     "rq5/rq5_high_burden_map_share.py",
+    "rq4/rq4_populous_counties_aqs_comparison.py",
     "ancillary/ancillary_scatter_traffic_vs_asthma.py",
     "ancillary/ancillary_hidden_hotspots_indicator.py",
     "ancillary/ancillary_pollution_vs_poverty_education.py",
@@ -65,13 +66,17 @@ def main() -> None:
         subprocess.run([sys.executable, str(standardize)], check=True)
 
     for name in SCRIPTS:
+        # RQ4 depends on AQS; skip unless --aqs is set
+        if name.startswith("rq4/") and not args.aqs:
+            continue
         run_script(PLOTS_DIR / name)
 
     # AQS plots require credentials; default is skip unless --aqs is passed
     load_env_file()
     if args.aqs:
         if os.getenv("AQS_USER") and os.getenv("AQS_PW"):
-            run_script(PLOTS_DIR / "rq3/rq3_aqs_vs_ces_scatter.py")
+            # rq3 already run in loop above; ensure AQS scatter exists if user enabled AQS
+            pass
         else:
             print("[SKIP] qx_aqs_vs_ces_scatter.py (missing AQS_USER/AQS_PW)")
     else:
