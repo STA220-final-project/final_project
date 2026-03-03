@@ -1,0 +1,14 @@
+Counts by trend:
+trend
+Mixed                     36
+Consistent Improvement    19
+Consistent Decline         3
+
+Counts by region and trend:
+region  trend                 
+North   Consistent Decline         2
+        Consistent Improvement    14
+        Mixed                     26
+South   Consistent Decline         1
+        Consistent Improvement     5
+        Mixed                     10

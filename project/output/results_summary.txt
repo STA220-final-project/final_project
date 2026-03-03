@@ -1,6 +1,0 @@
-Numeric summaries (use as raw facts; write your own narrative):
-Q1: Largest ΔCES tract = 6037120010.0 (Δ=34.136)
-Q3: Biggest county increase = Del Norte (Δ=10.488); Biggest decrease = Tehama  (Δ=-3.612)
-Q5: Correlation(ΔTraffic, ΔAsthma) = 0.045
-Q6: County with most high-burden tracts (2021) = Los Angeles (906)
-Q7: Hidden hotspots count (2021) = 1126

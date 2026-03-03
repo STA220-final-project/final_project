@@ -1,0 +1,13 @@
+indicator,count
+ozone_pctl,190
+imp_water_bodies_pctl,155
+traffic_pctl,121
+tox_release_pctl,111
+solid_waste_pctl,94
+groundwater_threats_pctl,91
+diesel_pm_pctl,78
+haz_waste_pctl,76
+drinking_water_pctl,72
+pm25_pctl,62
+pesticides_pctl,45
+cleanup_sites_pctl,31
