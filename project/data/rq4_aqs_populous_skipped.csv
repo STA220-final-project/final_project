@@ -1,0 +1,23 @@
+year,param,state,county_fips,county,reason
+2014,88101,06,037,"Los Angeles, CA",no_data_or_unavailable
+2014,88101,17,031,"Cook, IL",no_data_or_unavailable
+2014,88101,48,201,"Harris, TX",no_data_or_unavailable
+2014,88101,04,013,"Maricopa, AZ",no_data_or_unavailable
+2014,88101,06,073,"San Diego, CA",no_data_or_unavailable
+2014,88101,06,059,"Orange, CA",no_data_or_unavailable
+2014,88101,12,086,"Miami-Dade, FL",no_data_or_unavailable
+2014,88101,48,113,"Dallas, TX",no_data_or_unavailable
+2014,88101,06,065,"Riverside, CA",no_data_or_unavailable
+2014,88101,36,047,"Kings, NY",no_data_or_unavailable
+2014,44201,06,037,"Los Angeles, CA",no_data_or_unavailable
+2014,44201,17,031,"Cook, IL",no_data_or_unavailable
+2014,44201,48,201,"Harris, TX",no_data_or_unavailable
+2014,44201,04,013,"Maricopa, AZ",no_data_or_unavailable
+2014,44201,06,073,"San Diego, CA",no_data_or_unavailable
+2014,44201,06,059,"Orange, CA",no_data_or_unavailable
+2014,44201,12,086,"Miami-Dade, FL",no_data_or_unavailable
+2014,44201,48,113,"Dallas, TX",no_data_or_unavailable
+2014,44201,06,065,"Riverside, CA",no_data_or_unavailable
+2014,44201,36,047,"Kings, NY",no_data_or_unavailable
+2019,44201,36,047,"Kings, NY",no_data_or_unavailable
+2021,44201,36,047,"Kings, NY",no_data_or_unavailable

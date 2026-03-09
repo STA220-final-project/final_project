@@ -26,10 +26,11 @@ BASE_URL = "https://aqs.epa.gov/data/api"
 STATE_FIPS = "06"  # California
 PARAM_PM25 = "88101"
 PARAM_OZONE = "44201"
-YEARS = [2019, 2021]
+YEARS = [2014, 2019, 2021]
 SLEEP_SEC = 5.0
 RETRIES = 3
 CACHE_PATH = ROOT / "data" / "aqs_cache.json"
+LOCAL_AQS_PATH = ROOT / "data" / "aqs_ca_county_annual.csv"
 
 # Fallback CA county codes (FIPS, 3-digit) in case list/countiesByState is slow.
 CA_COUNTY_CODES = [
@@ -170,8 +171,6 @@ def normalize_county(name: str) -> str:
 def main() -> None:
     fig_dir = ensure_out_dir("rq3_aqs_validation", "figures")
     tbl_dir = ensure_out_dir("rq3_aqs_validation", "tables")
-    user = require_env("AQS_USER")
-    pw = require_env("AQS_PW")
 
     ces = load_data()
     ces = ces[ces["year"].isin(YEARS)].copy()
@@ -181,91 +180,23 @@ def main() -> None:
         ces.groupby(["county_norm", "year"], as_index=False)["ces_score"].mean()
     )
 
-    # Fetch AQS data
-    counties_df = fetch_counties(user, pw)
-    # AQS list service usually returns 'code' + 'name' for counties.
-    county_code_col = None
-    for c in ["county_code", "code", "county", "county_cd"]:
-        if c in counties_df.columns:
-            county_code_col = c
-            break
-    if county_code_col is None:
-        # fallback: any column containing 'code'
-        for c in counties_df.columns:
-            if "code" in c.lower():
-                county_code_col = c
-                break
-    if county_code_col is None:
-        raise ValueError(f"AQS counties list missing code column. Columns: {list(counties_df.columns)}")
-
-    county_codes = counties_df[county_code_col].astype(str).str.zfill(3).tolist()
-
-    # Cache to avoid losing progress if the API drops the connection.
-    cache = {}
-    if CACHE_PATH.exists():
-        cache = json.loads(CACHE_PATH.read_text())
-
-    aqs_frames = []
-    for year in YEARS:
-        for param in [PARAM_PM25, PARAM_OZONE]:
-            for county in county_codes:
-                print(f"Fetching year={year} param={param} county={county}...")
-                cache_key = f"{year}|{param}|{county}"
-                if cache_key in cache:
-                    rows = cache[cache_key]
-                    if rows:
-                        df = pd.DataFrame(rows)
-                        df["year"] = year
-                        df["param"] = param
-                        aqs_frames.append(df)
-                    time.sleep(SLEEP_SEC)
-                    continue
-
-                df = fetch_annual_by_county(user, pw, param, year, county)
-                rows = df.to_dict(orient="records") if not df.empty else []
-                cache[cache_key] = rows
-                CACHE_PATH.write_text(json.dumps(cache))
-                if rows:
-                    df["year"] = year
-                    df["param"] = param
-                    aqs_frames.append(df)
-                time.sleep(SLEEP_SEC)
-
-    if not aqs_frames:
-        raise ValueError("No AQS data returned. Check credentials or parameters.")
-
-    aqs = pd.concat(aqs_frames, ignore_index=True)
-
-    # Normalize county name in AQS (try common columns)
-    county_col = None
-    for c in ["county_name", "county", "county name"]:
-        if c in aqs.columns:
-            county_col = c
-            break
-    if county_col is None:
-        # fallback: try any column containing 'county'
-        for c in aqs.columns:
-            if "county" in c.lower():
-                county_col = c
-                break
-    if county_col is None:
-        raise ValueError("Could not find county column in AQS data.")
-
-    aqs["county_norm"] = aqs[county_col].astype(str).apply(normalize_county)
-
-    mean_col = pick_mean_column(aqs)
-
-    # Aggregate to county-level mean (average across sites in county)
-    aqs_mean = (
-        aqs.groupby(["county_norm", "year", "param"], as_index=False)[mean_col]
-        .mean()
-        .rename(columns={mean_col: "aqs_mean"})
-    )
+    # Use pre-fetched CSV only; do not hit the API during plotting.
+    if not LOCAL_AQS_PATH.exists():
+        raise RuntimeError(
+            f"Missing {LOCAL_AQS_PATH}. Run scripts/fetch/fetch_aqs_all.py first."
+        )
+    local = pd.read_csv(LOCAL_AQS_PATH)
+    required = {"county_norm", "year", "param", "aqs_mean"}
+    if not required.issubset(set(local.columns)):
+        raise RuntimeError(
+            f"{LOCAL_AQS_PATH} missing required columns: {sorted(required)}"
+        )
+    aqs_mean = local.copy()
 
     merged = ces_mean.merge(aqs_mean, on=["county_norm", "year"], how="inner")
 
     # Plot PM2.5
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig, axes = plt.subplots(1, len(YEARS), figsize=(14, 5))
     for i, year in enumerate(YEARS):
         sub = merged[(merged["year"] == year) & (merged["param"] == PARAM_PM25)]
         axes[i].scatter(sub["ces_score"], sub["aqs_mean"], s=18, alpha=0.7)
@@ -281,7 +212,7 @@ def main() -> None:
     fig.savefig(out_pm, dpi=150)
 
     # Plot Ozone
-    fig2, axes2 = plt.subplots(1, 2, figsize=(12, 5))
+    fig2, axes2 = plt.subplots(1, len(YEARS), figsize=(14, 5))
     for i, year in enumerate(YEARS):
         sub = merged[(merged["year"] == year) & (merged["param"] == PARAM_OZONE)]
         axes2[i].scatter(sub["ces_score"], sub["aqs_mean"], s=18, alpha=0.7)
@@ -302,6 +233,32 @@ def main() -> None:
     data_out = tbl_dir / "rq3_aqs_vs_ces_scatter.csv"
     merged.to_csv(data_out, index=False)
     print(f"Wrote {data_out}")
+
+    # Regression summary
+    rows = []
+    for year in YEARS:
+        for param in [PARAM_PM25, PARAM_OZONE]:
+            sub = merged[(merged["year"] == year) & (merged["param"] == param)]
+            if len(sub) < 2:
+                continue
+            x = sub["ces_score"].to_numpy()
+            y = sub["aqs_mean"].to_numpy()
+            m, b = np.polyfit(x, y, 1)
+            y_pred = m * x + b
+            ss_res = ((y - y_pred) ** 2).sum()
+            ss_tot = ((y - y.mean()) ** 2).sum()
+            r2 = 1 - ss_res / ss_tot if ss_tot != 0 else float("nan")
+            rows.append({
+                "year": year,
+                "param": param,
+                "slope": m,
+                "intercept": b,
+                "r2": r2,
+                "n": len(sub),
+            })
+    summary_out = tbl_dir / "rq3_aqs_vs_ces_regression_summary.csv"
+    pd.DataFrame(rows).to_csv(summary_out, index=False)
+    print(f"Wrote {summary_out}")
 
 
 if __name__ == "__main__":
