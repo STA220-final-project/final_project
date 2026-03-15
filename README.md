@@ -24,6 +24,6 @@ Final_Project
     └───data
     |   │   This folder includes raw and preprocessed data from our final project 
     └───output
-    |   │   Script outputs broken up by reasearch question (More info in folder)
+          Script outputs broken up by reasearch question (More info in folder)
         └───scripts
-    |   │   exploratory data retrival and plot cleaning scripts
+          Exploratory data retrival and plot cleaning scripts
