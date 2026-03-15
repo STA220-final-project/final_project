@@ -1,4 +1,4 @@
-"""Q1: Spatial point map of CES score change (2014→2021)."""
+"""RQ1: Spatial point map of CES score change (2014→2021)."""
 
 import matplotlib.pyplot as plt
 import sys
@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT / "scripts"))
-from plot_helpers import load_data, ensure_out_dir, OUT_DIR, plot_geojson_outline, try_import_basemap
+from plot_helpers import load_data, ensure_out_dir, plot_geojson_outline, try_import_basemap
 
 
 def main() -> None:
@@ -23,7 +23,6 @@ def main() -> None:
     wide = wide.dropna(subset=[2014, 2021])
     wide["delta_2014_2021"] = wide[2021] - wide[2014]
 
-    # Use 2021 lat/lon for mapping.
     coords = (
         df[df["year"] == 2021][["census_tract", "latitude", "longitude"]]
         .dropna()
@@ -55,7 +54,6 @@ def main() -> None:
         ax.set_axis_off()
         ax.set_title("Tract-Level CES Change (2014→2021)")
     else:
-        # Optional outline if a CA GeoJSON is available
         geojson_path = ROOT / "data" / "ca_state.geojson"
         plot_geojson_outline(ax, geojson_path)
 
@@ -64,7 +62,7 @@ def main() -> None:
             merged["latitude"],
             c=merged["delta_2014_2021"],
             cmap="RdBu_r",
-            s=10,
+            s=12,
             alpha=0.75,
             linewidths=0,
         )
@@ -80,7 +78,6 @@ def main() -> None:
     fig.savefig(out, dpi=150)
     print(f"Wrote {out}")
 
-    # Export data used for plotting
     data_out = tbl_dir / "rq1_map_ces_change_points.csv"
     merged[["census_tract", "latitude", "longitude", "delta_2014_2021"]].to_csv(
         data_out, index=False

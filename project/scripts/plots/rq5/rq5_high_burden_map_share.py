@@ -36,8 +36,17 @@ def plot_for_year(df, year: int) -> None:
     counties_geojson = ROOT / "data" / "ca_counties.geojson"
     counties_shp = ROOT / "data" / "shapefile" / "CA_Counties.shp"
 
+    if gpd and ctx and counties_shp.exists():
+        counties = gpd.read_file(counties_shp)
+    elif gpd and ctx and counties_geojson.exists():
+        counties = gpd.read_file(counties_geojson)
+    elif gpd and ctx:
+        raise FileNotFoundError(
+            "Missing county shapefile/geojson. Expected project/data/shapefile/CA_Counties.shp "
+            "or project/data/ca_counties.geojson."
+        )
+
     if gpd and ctx and (counties_shp.exists() or counties_geojson.exists()):
-        counties = gpd.read_file(counties_shp if counties_shp.exists() else counties_geojson)
         # Try common county name fields
         name_col = None
         for cand in ["name", "NAME", "county", "COUNTY", "CountyName", "COUNTY_NAME"]:
@@ -76,6 +85,16 @@ def plot_for_year(df, year: int) -> None:
         pad_y = (maxy - miny) * 0.03
         ax.set_xlim(minx - pad_x, maxx + pad_x)
         ax.set_ylim(miny - pad_y, maxy + pad_y)
+        fig.tight_layout()
+        fig_dir = ensure_out_dir("rq5_high_burden", "figures")
+        tbl_dir = ensure_out_dir("rq5_high_burden", "tables")
+        out = fig_dir / f"rq5_map_high_burden_share_{year}.png"
+        fig.savefig(out, dpi=150)
+        print(f"Wrote {out}")
+        data_out = tbl_dir / f"rq5_map_high_burden_share_{year}.csv"
+        merged.to_csv(data_out, index=False)
+        print(f"Wrote {data_out}")
+        return
     elif gpd and ctx:
         gdf = gpd.GeoDataFrame(
             merged,
