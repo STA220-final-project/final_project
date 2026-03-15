@@ -11,6 +11,7 @@ Data used for this project was collected from 2 primary sources:
 [2] United States Enviornmental Protection Agency Air Quality System: https://www.epa.gov/aqs
 
 ## Repository Structure
+```
 Final_Project
 │   README.md
 │   .gitignore
@@ -26,3 +27,4 @@ Final_Project
     |   │   Script outputs broken up by reasearch question (More info in folder)
         └───scripts
     |   │   exploratory data retrival and plot cleaning scripts
+    ```
