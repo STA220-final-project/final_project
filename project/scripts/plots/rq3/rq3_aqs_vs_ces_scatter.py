@@ -191,7 +191,15 @@ def main() -> None:
         raise RuntimeError(
             f"{LOCAL_AQS_PATH} missing required columns: {sorted(required)}"
         )
+    if local.empty:
+        raise RuntimeError(
+            f"{LOCAL_AQS_PATH} has no rows. Re-run scripts/fetch/fetch_aqs_all.py "
+            "and check project/data/aqs_ca_county_annual_skipped.csv."
+        )
     aqs_mean = local.copy()
+    aqs_mean["param"] = aqs_mean["param"].astype(str).str.zfill(5)
+    aqs_mean["year"] = pd.to_numeric(aqs_mean["year"], errors="coerce").astype("Int64")
+    ces_mean["year"] = pd.to_numeric(ces_mean["year"], errors="coerce").astype("Int64")
 
     merged = ces_mean.merge(aqs_mean, on=["county_norm", "year"], how="inner")
 

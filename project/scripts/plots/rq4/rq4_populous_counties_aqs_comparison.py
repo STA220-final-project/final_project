@@ -24,7 +24,10 @@ def load_data() -> pd.DataFrame:
         raise FileNotFoundError(
             f"Missing {DATA_PATH}. Run scripts/fetch/rq4_fetch_aqs_populous.py first."
         )
-    return pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
+    df["param"] = df["param"].astype(str).str.zfill(5)
+    df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
+    return df
 
 
 def main() -> None:
