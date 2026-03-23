@@ -52,3 +52,4 @@ rsconnect/
 .env
 __pycache__/
 .venv
+project/data/aqs_cache*.json
